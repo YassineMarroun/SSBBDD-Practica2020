@@ -1,0 +1,1 @@
+"WorldBankRegion", "Country", "ISO3", "wdpaID", "ParkName", "Year", "OutsideDeforestation", "InsideDeforestation"

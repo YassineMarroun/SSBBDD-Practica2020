@@ -1,0 +1,35 @@
+hadoop fs -mkdir deforestacionSubSahara
+
+hadoop fs -put /home/cloudera/deforestacionSubSahara/deforestationSubSahara.csv deforestacionSubSahara
+
+hadoop fs -ls deforestacionSubSahara
+
+create external table deforestacionTabla (
+  WorldBankRegion STRING, Country STRING, ISO3 STRING, wdpaID INT, ParkName STRING, Year INT, OutsideDeforestation DOUBLE, InsideDeforestation DOUBLE) 
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION '/user/cloudera/deforestacionSubSahara';
+
+
+create view deforestacionVista as
+    select ISO3, ParkName, wdpaID, AVG(OutsideDeforestation) as MediaOutsideDeforestation, AVG(InsideDeforestation) as MediaInsideDeforestation
+        from deforestacionTabla GROUP BY ISO3, ParkName, wdpaID;
+
+
+select ParkName, InsideDeforestation from deforestacionTabla where ParkName = "Rusizi" and Year = 2011;
+
+
+select ParkName, CAST(MediaInsideDeforestation as DECIMAL(10,2)) as MediaInsideDeforestation from deforestacionVista ORDER BY MediaInsideDeforestation DESC limit 10;
+
+
+select Country, CAST(SUM(InsideDeforestation) as DECIMAL(10,2)) as MayorInsideDeforestation from deforestacionTabla where Year = 2012 GROUP BY Country ORDER BY MayorInsideDeforestation DESC limit 10;
+
+
+cat /home/cloudera/deforestacionSubSahara/deforestationSubSahara.csv | ./mapper.py
+
+
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar -file mapper.py -mapper mapper.py -input /user/cloudera/deforestacionSubSahara/deforestationSubSahara.csv -output /user/cloudera/deforestacionSubSahara/salidaConsulta1
+
+
+hadoop fs -ls deforestacionSubSahara/salidaConsulta1
+
+
+hadoop fs -cat deforestacionSubSahara/salidaConsulta1/part-00000
